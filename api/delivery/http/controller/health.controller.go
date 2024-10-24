@@ -19,10 +19,6 @@ func (c *HealthController) HandleGetHealth(version string) http.HandlerFunc {
 			continue
 		}
 		switch kv.Key {
-		case "vcs.revision":
-			res.LastCommitHash = kv.Value
-		case "vcs.time":
-			res.LastCommitTime, _ = time.Parse(time.RFC3339, kv.Value)
 		case "vcs.modified":
 			res.DirtyBuild = kv.Value == "true"
 		}

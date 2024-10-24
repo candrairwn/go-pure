@@ -2,14 +2,14 @@ package middleware
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"runtime"
 
 	"github.com/candrairwn/go-pure/api/utils"
+	"go.uber.org/zap"
 )
 
-func Recovery(next http.Handler, log *slog.Logger) http.Handler {
+func Recovery(next http.Handler, log *zap.SugaredLogger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wr := utils.ResponseRecorder{ResponseWriter: w}
 		defer func() {
@@ -21,13 +21,13 @@ func Recovery(next http.Handler, log *slog.Logger) http.Handler {
 				stack := make([]byte, 1024)
 				n := runtime.Stack(stack, true)
 
-				log.ErrorContext(r.Context(), "panic!",
-					slog.Any("error", err),
-					slog.String("stack", string(stack[:n])),
-					slog.String("method", r.Method),
-					slog.String("path", r.URL.Path),
-					slog.String("query", r.URL.RawQuery),
-					slog.String("ip", r.RemoteAddr))
+				log.Errorw("panic!",
+					"error", err,
+					"stack", string(stack[:n]),
+					"method", r.Method,
+					"path", r.URL.Path,
+					"query", r.URL.RawQuery,
+					"ip", r.RemoteAddr)
 
 				if wr.Status == 0 { // response is not written yet
 					http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)

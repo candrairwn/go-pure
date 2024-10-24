@@ -20,32 +20,34 @@ type Bootstrap struct {
 	Args   []string
 }
 
-func Run(config *Bootstrap) error {
-	ctx, cancel := signal.NotifyContext(config.Ctx, syscall.SIGINT, syscall.SIGTERM)
+func Run(configBoot *Bootstrap) error {
+	ctx, cancel := signal.NotifyContext(configBoot.Ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	// Parse flags
 	var port uint
-	fs := flag.NewFlagSet(config.Args[0], flag.ExitOnError)
-	fs.SetOutput(config.Stdout)
+	fs := flag.NewFlagSet(configBoot.Args[0], flag.ExitOnError)
+	fs.SetOutput(configBoot.Stdout)
 	fs.UintVar(&port, "port", 80, "port to listen on")
-	if err := fs.Parse(config.Args[1:]); err != nil {
+	if err := fs.Parse(configBoot.Args[1:]); err != nil {
 		return err
 	}
 
 	// Set up logging
-	slog.SetDefault(slog.New(slog.NewJSONHandler(config.Stdout, nil)))
+	// slog.SetDefault(slog.New(slog.NewJSONHandler(configBoot.Stdout, nil)))
+	log := NewLogger()
 
 	// Start the server
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
-		Handler: routes.Route(slog.Default(), "1.0"),
+		Handler: routes.Route(log, "1.0"),
 	}
 
 	// Start the server
 	errChan := make(chan error, 1)
 	go func() {
-		slog.InfoContext(ctx, "starting", slog.String("addr", server.Addr))
+		log.Info("starting server on port " + server.Addr)
+		// slog.InfoContext(ctx, "starting", slog.String("addr", server.Addr))
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errChan <- err
 		}

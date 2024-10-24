@@ -1,23 +1,23 @@
 package routes
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/candrairwn/go-pure/api/delivery/http/controller"
 	"github.com/candrairwn/go-pure/api/delivery/http/middleware"
 	"github.com/candrairwn/go-pure/api/delivery/websocket"
+	"go.uber.org/zap"
 )
 
 type RouteConfig struct {
 	Mux              *http.ServeMux
-	Log              *slog.Logger
+	Log              *zap.SugaredLogger
 	Version          string
 	HealthController *controller.HealthController
 	WebsocketHandler *websocket.WebsocketHandler
 }
 
-func NewRouteConfig(log *slog.Logger, version string) *RouteConfig {
+func NewRouteConfig(log *zap.SugaredLogger, version string) *RouteConfig {
 	return &RouteConfig{
 		Mux:              http.NewServeMux(),
 		Log:              log,
@@ -27,7 +27,7 @@ func NewRouteConfig(log *slog.Logger, version string) *RouteConfig {
 	}
 }
 
-func Route(log *slog.Logger, version string) http.Handler {
+func Route(log *zap.SugaredLogger, version string) http.Handler {
 	// Create a new RouteConfig instance
 	config := NewRouteConfig(log, version)
 	config.SetupGuestRoutes()

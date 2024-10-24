@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 type WebsocketHandler struct {
@@ -27,7 +28,7 @@ func NewWebsocketHandler() *WebsocketHandler {
 	return &WebsocketHandler{}
 }
 
-func (w *WebsocketHandler) Run(log *slog.Logger) http.HandlerFunc {
+func (w *WebsocketHandler) Run(log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
