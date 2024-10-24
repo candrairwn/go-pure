@@ -1,0 +1,20 @@
+services:
+  proxy:
+    image: registry.unpam.ac.id/unpamofficial/nginx:1.24-bullseye
+    environment:
+      - TZ=Asia/Jakarta
+    volumes:
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    ports:
+      - 80:80
+    depends_on:
+      - app
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TZ=Asia/Jakarta
+    volumes:
+      - ./:/app
