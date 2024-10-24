@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -32,34 +31,34 @@ func (w *WebsocketHandler) Run(log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Error("upgrade error", slog.String("error", err.Error()))
+			log.Error("upgrade error", zap.String("error", err.Error()))
 		}
 
 		defer func() {
 			if err := conn.Close(); err != nil {
-				log.Error("close error", slog.String("error", err.Error()))
+				log.Error("close error", zap.String("error", err.Error()))
 			}
 		}()
 
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				log.Error("read error", slog.String("error", err.Error()))
+				log.Error("read error", zap.String("error", err.Error()))
 				break
 			}
 
-			log.Info("message received", slog.String("message", string(message)))
+			log.Infow("message received", "message", string(message))
 
 			var msg Message
 			if err := json.Unmarshal(message, &msg); err != nil {
-				log.Error("unmarshal error", slog.String("error", err.Error()))
+				log.Errorw("unmarshal error", "error", err.Error())
 				break
 			}
 
 			if err := conn.WriteMessage(websocket.TextMessage, []byte(
 				"Hello, I'm a d4ark nich hoohoh "+msg.Nama+"!",
 			)); err != nil {
-				log.Error("write error", slog.String("error", err.Error()))
+				log.Errorw("write error", "error", err.Error())
 				break
 			}
 		}

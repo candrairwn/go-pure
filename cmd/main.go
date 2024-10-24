@@ -11,11 +11,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	if err := config.Run(&config.Bootstrap{
-		Ctx:    ctx,
-		Stdout: os.Stdout,
-		Args:   os.Args,
-	}); err != nil {
+	if err := config.Run(&config.Bootstrap{Ctx: ctx}); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}

@@ -5,6 +5,31 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type Valuer interface {
+	Value(key interface{}) interface{}
+}
+
+func Context(key string, value Valuer) zap.Field {
+	return zap.Object(key, valuer{value})
+}
+
+type (
+	valuer struct {
+		Valuer
+	}
+
+	contextKey struct{}
+)
+
+func (v valuer) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	fs, _ := v.Value(contextKey{}).([]zap.Field)
+	for i := range fs {
+		fs[i].AddTo(enc)
+	}
+
+	return nil
+}
+
 func NewLogger() *zap.SugaredLogger {
 	config := zap.Config{
 		Encoding:         "json", // Set encoding to JSON
