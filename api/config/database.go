@@ -5,6 +5,9 @@ import (
 	"time"
 
 	"github.com/candrairwn/go-pure/api/utils"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -36,7 +39,7 @@ func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) *gorm.DB {
 		Password:              password,
 		Host:                  viper.GetString("DB_HOST"),
 		Port:                  viper.GetString("DB_PORT"),
-		Database:              viper.GetString("DB_NAME"),
+		Database:              viper.GetString("DB_DATABASE"),
 		IdleConnection:        viper.GetInt("DB_IDLE_CONNECTION"),
 		MaxConnection:         viper.GetInt("DB_MAX_CONNECTION"),
 		MaxIdleTimeConnection: viper.GetInt("DB_MAX_IDLE_TIME_CONNECTION"),
@@ -44,6 +47,12 @@ func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) *gorm.DB {
 	}
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", config.Host, config.Port, config.Username, config.Password, config.Database)
+
+	dsnMigrate := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", config.Username, config.Password, config.Host, config.Port, config.Database)
+
+	if err := MigrateRun(dsnMigrate, log); err != nil {
+		log.Fatalf("failed to migrate: %v", err)
+	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -72,6 +81,26 @@ func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) *gorm.DB {
 	connection.SetConnMaxIdleTime(time.Duration(config.MaxIdleTimeConnection) * time.Minute)
 	connection.SetConnMaxLifetime(time.Duration(config.maxLifeTimeConnection) * time.Minute)
 	return db
+}
+
+func MigrateRun(dsnMigrate string, log *zap.SugaredLogger) error {
+	m, err := migrate.New("file://migrations", dsnMigrate)
+	if err != nil {
+		return err
+	}
+
+	if err := m.Up(); err != nil {
+		log.Infof("error migrate: %v", err)
+		if err.Error() == "no change" {
+			return nil
+		} else {
+			return err
+		}
+	}
+
+	log.Info("migrate success")
+
+	return nil
 }
 
 type zapWriter struct {

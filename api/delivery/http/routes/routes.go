@@ -17,29 +17,17 @@ type RouteConfig struct {
 	WebsocketHandler *websocket.WebsocketHandler
 }
 
-func NewRouteConfig(log *zap.SugaredLogger, version string) *RouteConfig {
-	return &RouteConfig{
-		Mux:              http.NewServeMux(),
-		Log:              log,
-		Version:          version,
-		HealthController: &controller.HealthController{},
-		WebsocketHandler: websocket.NewWebsocketHandler(),
-	}
-}
+func (c *RouteConfig) Setup() http.Handler {
+	c.SetupGuestRoutes()
 
-func Route(log *zap.SugaredLogger, version string) http.Handler {
-	// Create a new RouteConfig instance
-	config := NewRouteConfig(log, version)
-	config.SetupGuestRoutes()
-
-	// Setup middleware
-	handler := middleware.Accesslog(config.Mux, log)
-	handler = middleware.Recovery(handler, log)
+	handler := middleware.Accesslog(c.Mux, c.Log)
+	handler = middleware.Recovery(handler, c.Log)
 
 	return handler
+
 }
 
 func (c *RouteConfig) SetupGuestRoutes() {
-	c.Mux.HandleFunc("/health", c.HealthController.HandleGetHealth(c.Version))
-	c.Mux.HandleFunc("/ws", c.WebsocketHandler.Run(c.Log))
+	c.Mux.HandleFunc("GET /health", c.HealthController.HandleGetHealth())
+	c.Mux.HandleFunc("GET /ws", c.WebsocketHandler.Broadcast)
 }

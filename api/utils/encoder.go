@@ -14,3 +14,20 @@ func Encode[T any](w http.ResponseWriter, r *http.Request, status int, v T) erro
 	}
 	return nil
 }
+
+// Wrapper function to add additional data
+func EncodeWithWrapper[T any](w http.ResponseWriter, r *http.Request, status int, v T, additionalData map[string]interface{}) error {
+	// Create a map to hold the original data and the additional data
+	response := make(map[string]interface{})
+
+	// Add the original data
+	response["data"] = v
+
+	// Add the additional data
+	for key, value := range additionalData {
+		response[key] = value
+	}
+
+	// Call the original Encode function with the wrapped response
+	return Encode(w, r, status, response)
+}

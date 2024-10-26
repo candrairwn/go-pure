@@ -2,29 +2,13 @@ package config
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
-	"github.com/candrairwn/go-pure/api/delivery/http/routes"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-func AppRunServe(ctx context.Context, viperCustom *viper.Viper, log *zap.SugaredLogger) (*http.Server, error) {
-	// port configuration
-	var port uint
-	if viperCustom.GetUint("WEB_PORT") == 0 {
-		port = 80
-	} else {
-		port = viperCustom.GetUint("WEB_PORT")
-	}
-
-	// Create a new http server
-	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
-		Handler: routes.Route(log, viperCustom.GetString("APP_VERSION")),
-	}
-
+func AppRunServe(ctx context.Context, server *http.Server, viperCustom *viper.Viper, log *zap.SugaredLogger) (*http.Server, error) {
 	// Run the server
 	errChan := make(chan error, 1)
 	go func() {
