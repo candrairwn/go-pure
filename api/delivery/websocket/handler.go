@@ -30,49 +30,10 @@ func NewWebsocketHandler(log *zap.SugaredLogger) *WebsocketHandler {
 	}
 }
 
-func (wh *WebsocketHandler) Index() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-
-			wh.Log.Error("upgrade error", zap.String("error", err.Error()))
-		}
-
-		defer func() {
-			if err := conn.Close(); err != nil {
-				wh.Log.Error("close error", zap.String("error", err.Error()))
-			}
-		}()
-
-		for {
-			_, message, err := conn.ReadMessage()
-			if err != nil {
-				wh.Log.Error("read error", zap.String("error", err.Error()))
-				break
-			}
-
-			wh.Log.Infow("message received", "message", string(message))
-
-			var msg Message
-			if err := json.Unmarshal(message, &msg); err != nil {
-				wh.Log.Errorw("unmarshal error", "error", err.Error())
-				break
-			}
-
-			if err := conn.WriteMessage(websocket.TextMessage, []byte(
-				"Hello, I'm a d4ark nich hoohoh "+msg.Nama+"!",
-			)); err != nil {
-				wh.Log.Errorw("write error", "error", err.Error())
-				break
-			}
-		}
-	}
-}
-
 func (wh *WebsocketHandler) Broadcast(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+
 		wh.Log.Error("upgrade error", zap.String("error", err.Error()))
 	}
 
@@ -91,8 +52,14 @@ func (wh *WebsocketHandler) Broadcast(w http.ResponseWriter, r *http.Request) {
 
 		wh.Log.Infow("message received", "message", string(message))
 
+		var msg Message
+		if err := json.Unmarshal(message, &msg); err != nil {
+			wh.Log.Errorw("unmarshal error", "error", err.Error())
+			break
+		}
+
 		if err := conn.WriteMessage(websocket.TextMessage, []byte(
-			"Hello, I'm a d4ark nich hoohoh!"+string(message),
+			"Hello, I'm a d4ark nich hoohoh "+msg.Nama+"!",
 		)); err != nil {
 			wh.Log.Errorw("write error", "error", err.Error())
 			break
