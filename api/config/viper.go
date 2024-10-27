@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewViper(log *zap.SugaredLogger) *viper.Viper {
+func NewViper(log *zap.SugaredLogger) (*viper.Viper, error) {
 	viper := viper.New()
 
 	viper.AutomaticEnv()
@@ -15,7 +15,10 @@ func NewViper(log *zap.SugaredLogger) *viper.Viper {
 
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("failed to read config")
+		return nil, err
 	}
 
-	return viper
+	log.Info("success read config")
+
+	return viper, nil
 }

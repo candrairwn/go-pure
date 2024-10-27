@@ -30,7 +30,7 @@ func (v valuer) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	return nil
 }
 
-func NewLogger() *zap.SugaredLogger {
+func NewLogger() (*zap.SugaredLogger, error) {
 	config := zap.Config{
 		Encoding:         "json", // Set encoding to JSON
 		Level:            zap.NewAtomicLevelAt(zap.InfoLevel),
@@ -54,7 +54,7 @@ func NewLogger() *zap.SugaredLogger {
 	// Build the logger
 	logger, err := config.Build()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	defer logger.Sync() // Flushes buffer, if any
@@ -62,5 +62,7 @@ func NewLogger() *zap.SugaredLogger {
 	// Create a SugaredLogger from the built logger
 	sugar := logger.Sugar()
 
-	return sugar
+	logger.Info("logger started")
+
+	return sugar, nil
 }

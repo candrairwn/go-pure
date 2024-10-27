@@ -22,6 +22,7 @@ func BootsrapWire(config *BootstrapWireConfig) http.Handler {
 
 	// Set up controller
 	healthController := controller.NewHealthController(config.DB, config.Viper.GetString("APP_VERSION"))
+	userController := controller.NewUserController(config.Log)
 
 	// Set up websocket
 	websocketHandler := websocket.NewWebsocketHandler(config.Log)
@@ -31,6 +32,7 @@ func BootsrapWire(config *BootstrapWireConfig) http.Handler {
 		Mux:              config.App,
 		Log:              config.Log,
 		Version:          config.Viper.GetString("APP_VERSION"),
+		UserController:   userController,
 		HealthController: healthController,
 		WebsocketHandler: websocketHandler,
 	}

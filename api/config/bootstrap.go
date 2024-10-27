@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/candrairwn/go-pure/api/utils"
 )
 
 type Bootstrap struct {
@@ -19,13 +21,27 @@ func Run(configBoot *Bootstrap) error {
 	defer cancel()
 
 	// Set up logging
-	log := NewLogger()
+	log, err := NewLogger()
+	if err != nil {
+		return err
+	}
 
 	// set up viper
-	viperCustom := NewViper(log)
+	viperCustom, err := NewViper(log)
+	if err != nil {
+		return err
+	}
 
 	// Set up database
-	db := NewDatabasePostgres(viperCustom, log)
+	db, err := NewDatabasePostgres(viperCustom, log)
+	if err != nil {
+		return err
+	}
+
+	err = utils.NewJWTUtil(viperCustom, log).LoadFileKeys()
+	if err != nil {
+		return err
+	}
 
 	// Set Up Port default 80
 	var port uint

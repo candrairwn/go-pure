@@ -39,8 +39,8 @@ kill_delay = 300 # ms
 
 [log]
 # Show log time
-time = false
-main_only = true
+time = true
+main_only = false
 
 [color]
 # Customize each part's color. If no color found, use the raw app log.

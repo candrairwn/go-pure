@@ -1,6 +1,6 @@
 services:
   proxy:
-    image: registry.unpam.ac.id/unpamofficial/nginx:1.24-bullseye
+    image: nginx:alpine
     env_file:
       - .env
     volumes:

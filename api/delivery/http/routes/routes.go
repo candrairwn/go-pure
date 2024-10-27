@@ -14,11 +14,13 @@ type RouteConfig struct {
 	Log              *zap.SugaredLogger
 	Version          string
 	HealthController *controller.HealthController
+	UserController   *controller.UserController
 	WebsocketHandler *websocket.WebsocketHandler
 }
 
 func (c *RouteConfig) Setup() http.Handler {
 	c.SetupGuestRoutes()
+	c.SetupUserRoutes()
 
 	handler := middleware.Accesslog(c.Mux, c.Log)
 	handler = middleware.Recovery(handler, c.Log)
@@ -30,4 +32,9 @@ func (c *RouteConfig) Setup() http.Handler {
 func (c *RouteConfig) SetupGuestRoutes() {
 	c.Mux.HandleFunc("GET /health", c.HealthController.HandleGetHealth())
 	c.Mux.HandleFunc("GET /ws", c.WebsocketHandler.Broadcast)
+}
+
+func (c *RouteConfig) SetupUserRoutes() {
+	// create user with v1 version with strip prefix
+	c.Mux.HandleFunc("POST /login", c.UserController.Login)
 }

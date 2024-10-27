@@ -28,7 +28,7 @@ type ConfigDefaultDatabase struct {
 	maxLifeTimeConnection int
 }
 
-func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) *gorm.DB {
+func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) (*gorm.DB, error) {
 	password, err := utils.ReadFile(viper.GetString("DB_PASSWORD"), log)
 	if err != nil {
 		log.Fatalf("failed to read db password: %v", err)
@@ -52,6 +52,7 @@ func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) *gorm.DB {
 
 	if err := MigrateRun(dsnMigrate, log); err != nil {
 		log.Fatalf("failed to migrate: %v", err)
+		return nil, err
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -69,18 +70,22 @@ func NewDatabasePostgres(viper *viper.Viper, log *zap.SugaredLogger) *gorm.DB {
 
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
+		return nil, err
 	}
 
 	connection, err := db.DB()
 	if err != nil {
 		log.Fatalf("failed to get db connection: %v", err)
+		return nil, err
 	}
 
 	connection.SetMaxIdleConns(config.IdleConnection)
 	connection.SetMaxOpenConns(config.MaxConnection)
 	connection.SetConnMaxIdleTime(time.Duration(config.MaxIdleTimeConnection) * time.Minute)
 	connection.SetConnMaxLifetime(time.Duration(config.maxLifeTimeConnection) * time.Minute)
-	return db
+
+	log.Info("database connected")
+	return db, nil
 }
 
 func MigrateRun(dsnMigrate string, log *zap.SugaredLogger) error {
@@ -90,7 +95,7 @@ func MigrateRun(dsnMigrate string, log *zap.SugaredLogger) error {
 	}
 
 	if err := m.Up(); err != nil {
-		log.Infof("error migrate: %v", err)
+		log.Infof("migrate: %v", err)
 		if err.Error() == "no change" {
 			return nil
 		} else {
