@@ -1,0 +1,82 @@
+openapi: '3.1.0'
+info:
+  title: API Title
+  version: 1.0.0
+servers:
+  - url: http://localhost
+paths:
+  /api/health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: To check Server health with version, uptime, dirty_build and db_status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/_login:
+    post:
+      deprecated: false
+      tags:
+        - Auth
+      summary: Login endpoint
+      description: To login with username and password using account mylsp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: 'mylspacount'
+        password:
+          type: string
+          example: 'mylsppassword'
+    LoginResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              example: 'eyJhbGciOi'
+    HealthResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            version:
+              type: string
+              example: '1.0.0'
+            uptime:
+              type: string
+              example: '20.213002979s'
+            dirty_build:
+              type: boolean
+              example: false
+            db_status:
+              type: string
+              example: 'Up'
+    
